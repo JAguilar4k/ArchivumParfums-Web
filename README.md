@@ -1,6 +1,6 @@
-# archivum-web
+# ArchivumParfums Web
 
-Cliente web de ArchivumParfums: una SPA en Vue 3 con TypeScript que consume solo la API de [`archivum-api-hexagonal`](../archivum-api-hexagonal/). No tiene acceso a la base de datos ni reglas de negocio propias: precios, montos y disponibilidad siempre vienen de la API.
+Cliente web de ArchivumParfums. La SPA en Vue 3 y TypeScript consume la API del [backend](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal), que calcula los precios, los montos y la disponibilidad.
 
 ## Requisitos
 
@@ -8,7 +8,7 @@ Cliente web de ArchivumParfums: una SPA en Vue 3 con TypeScript que consume solo
 |---|---|
 | Node.js | 26 LTS (26.11 o superior dentro de la 26, fijada en `engines` de `package.json`) |
 | npm | 11, el que trae Node.js 26 |
-| API | `archivum-api-hexagonal` en ejecución, según [su README](../archivum-api-hexagonal/README.md) |
+| API | Backend en ejecución para desarrollo. [Guía de instalación](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/tree/main/archivum-api-hexagonal#readme) |
 
 `node -v` y `npm -v` muestran lo instalado. Con otra versión de Node.js, `npm install` avisa con `EBADENGINE`.
 
@@ -16,10 +16,11 @@ Cliente web de ArchivumParfums: una SPA en Vue 3 con TypeScript que consume solo
 
 Los comandos sirven en PowerShell, en Git Bash y en una terminal de Linux o macOS.
 
-1. Entrar a la carpeta del cliente, desde la raíz del repositorio:
+1. Clonar el repositorio y entrar en su raíz.
 
    ```bash
-   cd archivum-web
+   git clone https://github.com/JAguilar4k/ArchivumParfums-Web.git
+   cd ArchivumParfums-Web
    ```
 
 2. Instalar las dependencias exactas de `package-lock.json`:
@@ -57,6 +58,8 @@ Vite solo expone al navegador las variables que empiezan con `VITE_`. Todas se d
 
 Las variables se leen al compilar: después de cambiar `.env`, se reinicia `npm run dev` o se vuelve a ejecutar `npm run build`.
 
+En el despliegue, definí las variables `VITE_*` antes de compilar y publicá `dist/`. Configurá el alojamiento para entregar `index.html` al abrir directamente una ruta de Vue Router. En el backend, `ARCHIVUM_WEB_ORIGIN` lleva el origen público de la SPA y `PAYMENTS_RETURN_URL` y `PAYMENTS_CANCEL_URL` llevan las rutas de retorno de ese mismo sitio.
+
 ## Comandos
 
 | Comando | Qué hace |
@@ -70,31 +73,32 @@ Las variables se leen al compilar: después de cambiar `.env`, se reinicia `npm 
 | `npm run test` | Ejecuta las pruebas unitarias con Vitest una vez. |
 | `npm run test:watch` | Ejecuta las pruebas cada vez que cambia un archivo. |
 | `npm run test:e2e` | Ejecuta las pruebas de flujos, accesibilidad y tiempos de navegación con Playwright y respuestas simuladas. |
-| `npm run api:types` | Regenera `src/api/schema.ts` desde `../archivum-api-hexagonal/openapi/v1.json`. |
+| `npm run api:types` | Regenera `src/api/schema.ts` desde `openapi/v1.json`. |
 | `npm run api:check` | Falla si `src/api/schema.ts` no coincide con `openapi/v1.json`. |
 
 Antes de abrir un pull request pasan `npm run lint`, `npm run type-check`, `npm run test`, `npm run build`, `npm run api:check` y `npm run test:e2e`. Ejecute `npx playwright install chromium` antes de la primera corrida de Playwright. El servidor de pruebas de Playwright usa respuestas simuladas y arranca sin una API local.
 
 ## Integración continua
 
-El job `Web` de [`ci.yml`](../.github/workflows/ci.yml) valida el cliente en cada pull request y en cada push a `main`, junto al job `Quality` de la API. Con la versión de Node.js de `engines` y la caché de npm, ejecuta `npm ci`, `npm run api:check`, `npm run lint`, `npm run type-check`, `npm run test`, `npm run build`, `npm run test:e2e` con Chromium y `npm audit --audit-level=critical`: falla si los tipos no coinciden con `openapi/v1.json`, si un flujo, la auditoría de accesibilidad o una medición de navegación de Playwright falla, o si hay una vulnerabilidad crítica. Las capturas y las trazas de Playwright quedan 14 días como artefacto `playwright` de la corrida; no se guardan en el repositorio. Corre en todo pull request, aunque no toque `archivum-web/`, para que el check siempre se informe.
+El job `Web` valida el cliente en cada pull request y en cada push a `main`. Usa la versión de Node.js de `engines` y ejecuta `npm ci`, `npm run api:check`, `npm run lint`, `npm run type-check`, `npm run test`, `npm run build`, `npm run test:e2e` con Chromium y `npm audit --audit-level=critical`. Las capturas y las trazas de Playwright quedan 14 días como artefacto `playwright` de la corrida. [Configuración de CI](.github/workflows/ci.yml).
 
-El nivel crítico de la auditoría es temporal (#335). picomatch 4.0.7 y anteriores tienen un aviso de severidad alta ([GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf)) que todavía no tiene versión corregida, y Vite, Vitest, vue-tsc, los complementos de ESLint y Vue Router dependen de ella. Cuando `package-lock.json` tenga una picomatch corregida, el paso vuelve a `--audit-level=high` y falla otra vez con cualquier vulnerabilidad alta.
+La separación conserva el umbral `critical` adoptado en el seguimiento de picomatch. GitHub retiró el aviso que motivó el cambio el 18 de noviembre de 2026. `npm audit` sigue mostrando los avisos de otras severidades. [Seguimiento #335](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/issues/335), [aviso de seguridad](https://github.com/advisories/GHSA-fc5q-39xc-vjpf).
 
-Dependabot revisa las dependencias de npm cada lunes, con el mismo prefijo `build` y el mismo grupo de versiones menores y parches que Composer ([`dependabot.yml`](../.github/dependabot.yml)).
+Dependabot revisa npm y GitHub Actions cada lunes. Las actualizaciones menores y de parche de npm se agrupan con el prefijo `build`. [Configuración de Dependabot](.github/dependabot.yml).
 
 ## Tipos de la API
 
-Ningún tipo de la API se escribe a mano. `openapi-typescript` genera `src/api/schema.ts` desde el contrato `openapi/v1.json` de la API, que genera Scramble, y `openapi-fetch` da el cliente tipado de `src/api/client.ts`. Una llamada que el contrato no permite (una ruta que no existe, un cuerpo sin un campo obligatorio o un atributo que la respuesta no tiene) hace fallar `npm run type-check`; las pruebas de `src/api/__tests__/contract.spec.ts` lo comprueban.
+Scramble genera el contrato de la API en el backend. Este repositorio versiona una copia exacta en `openapi/v1.json` y anota su commit de origen en `openapi/source.txt`. `openapi-typescript` genera `src/api/schema.ts` desde esa copia y `openapi-fetch` da el cliente tipado de `src/api/client.ts`. Una llamada fuera del contrato hace fallar `npm run type-check`.
 
-`src/api/schema.ts` se versiona y no se edita. El pull request que cambia un endpoint regenera los dos archivos y los incluye:
+Si cambia un endpoint, el PR del backend regenera el contrato con `composer openapi`. En el PR de Web, sustituí `SHA_DEL_BACKEND` por el SHA completo de un commit del backend que contenga el contrato y ejecutá desde la raíz de Web los siguientes comandos. En PowerShell usá `curl.exe`.
 
 ```bash
-cd archivum-api-hexagonal && composer openapi      # openapi/v1.json
-cd ../archivum-web && npm run api:types            # src/api/schema.ts
+curl -fsSL "https://raw.githubusercontent.com/JAguilar4k/ArchivumParfums-Hexagonal/SHA_DEL_BACKEND/archivum-api-hexagonal/openapi/v1.json" -o openapi/v1.json
+npm run api:types
+npm run api:check
 ```
 
-`npm run api:check` regenera los tipos en memoria y falla si difieren de los versionados.
+Escribí ese SHA en `openapi/source.txt` e incluí los tres archivos en el PR. `npm run api:check` compara los tipos versionados con los generados en memoria, usando la copia del contrato. El desarrollo y la CI de Web usan este archivo local.
 
 El cliente `api` toma la dirección de `VITE_API_URL`, envía `Accept: application/json` y, cuando hay sesión, su token como `Authorization: Bearer`. Cada llamada devuelve `data` si la respuesta fue exitosa o `error` con el problema RFC 9457 que documenta el contrato (`Problem` o, en una validación fallida, `ValidationProblem` con `errores` por campo):
 
@@ -132,7 +136,7 @@ Una ruta sin `meta.roles` es pública. El visitante que abre una ruta con roles 
 
 La vista "Crear cuenta" (`/crear-cuenta`, `src/features/registration`, [#194](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/issues/194)) registra una cuenta de cliente con `POST /cuentas`: envía `nombre`, `correo`, `contrasena` y `acepta_privacidad`, nunca un rol ni una tienda.
 
-- **Aviso de privacidad.** `PrivacyNotice.vue` dice qué datos guarda la cuenta, para qué y quién los ve, como los lista `docs/privacy.md` (#110). La casilla de aceptación empieza sin marcar y, sin marcarla, el formulario no se envía. La API registra la fecha y la versión aceptada (`ARCHIVUM_PRIVACY_NOTICE_VERSION`): si el texto cambia, esa versión también.
+- **Aviso de privacidad.** `PrivacyNotice.vue` dice qué datos guarda la cuenta, para qué y quién los ve. La casilla de aceptación empieza sin marcar. Al aceptar, la API guarda la fecha y la versión (`ARCHIVUM_PRIVACY_NOTICE_VERSION`), que se actualiza cuando cambia el aviso. [Política de privacidad del proyecto](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/blob/main/docs/privacy.md).
 - **Errores.** La política de contraseñas la decide la API: un 422 marca cada campo con su mensaje, conserva lo escrito salvo la contraseña y lleva el foco al primer campo con error. Mientras la solicitud está en curso el botón lleva `aria-disabled`: conserva el foco y un segundo clic no manda otro registro.
 - **Después del 201** se inicia sesión como en "Iniciar sesión" y se regresa a la ruta que el visitante quería abrir (`?redirect=`), o a la vitrina. Si la cuenta se creó pero el inicio de sesión falla, se abre "Iniciar sesión" con el correo ya escrito y el aviso "Se creó su cuenta": el correo pasa en memoria, nunca por la URL ni por el almacenamiento.
 - **Accesibilidad (AAA).** Cada campo tiene una pista antes del control, ligada con `aria-describedby`: para qué sirven el nombre y el correo, y un consejo para la contraseña que no repite la política de la API (#194): si la contraseña no la cumple, el 422 dice junto al campo qué le falta. "Mostrar la contraseña" deja revisarla. Si se envía sin marcar la casilla, el foco va a la casilla, que lee su mensaje, y el mensaje se va al marcarla. El aviso de privacidad va enmarcado dentro del formulario, y "Ayuda y glosario" explica la cuenta en "Su cuenta".
@@ -298,10 +302,11 @@ En un formulario, cada control lleva `name` igual a su campo de la API y `v-bind
 ## Estructura
 
 ```
-archivum-web/
+ArchivumParfums-Web/
 ├── .env.example          variables de entorno del cliente
 ├── env.d.ts              tipos de las variables de entorno
 ├── index.html
+├── openapi/              contrato v1 y commit de origen
 ├── src/
 │   ├── main.ts           crea la aplicación con Pinia, la sesión, los estilos y Vue Router
 │   ├── App.vue           marco de la página: "Saltar al contenido", cabecera, main, pie y anunciador
@@ -336,4 +341,12 @@ El código se organiza por funcionalidad. Cada una vive en `src/features/<funcio
 
 ## Idioma
 
-El código, los nombres y los comentarios van en inglés; los textos de la interfaz, en español. Es la misma regla de la API ([CLAUDE.md](../CLAUDE.md), Idioma).
+El código, los nombres y los comentarios van en inglés. Los textos de la interfaz están en español. [Convenciones del proyecto](AGENTS.md).
+
+## Uso de IA
+
+El registro de asistencia y revisiones previo a la separación está en el README del proyecto original. [Registro de Uso de IA](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/blob/aa5d6f596f3694ba0c3cbffa957bc81eb391de1c/README.md#uso-de-ia).
+
+| Parte | Asistente | Qué generó la IA | Qué verificó el equipo |
+|---|---|---|---|
+| Separación del cliente web | Codex | Extracción del historial, configuración de CI y Dependabot, copia versionada del contrato y actualización de las instrucciones de instalación. | Codex verificó el contrato, lint, tipos, compilación, las 210 pruebas de Vitest, los 16 recorridos de Playwright y la auditoría con el umbral de CI. Revisión humana pendiente. |
