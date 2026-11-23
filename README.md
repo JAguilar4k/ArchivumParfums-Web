@@ -54,7 +54,7 @@ Vite solo expone al navegador las variables que empiezan con `VITE_`. Todas se d
 |---|---|---|
 | `VITE_API_URL` | `http://localhost:8000/api/v1` | Dirección base de la API, con el prefijo `/api/v1`. |
 | `VITE_DEFAULT_BUSINESS_SLUG` | `archivumparfums` | Tienda que abre la raíz del cliente (`/`); `archivumparfums` es la tienda piloto de los seeders. |
-| `VITE_STORE_WHATSAPP` | `50600000000` | Número de demostración en formato internacional, sin `+`. El enlace a WhatsApp se oculta si la variable está vacía. |
+| `VITE_STORE_WHATSAPP` | Vacío | Número público de WhatsApp de la tienda, incluido el código del país. Se admite un `+` inicial. El enlace se oculta si la variable está vacía o el formato es inválido. |
 
 Las variables se leen al compilar: después de cambiar `.env`, se reinicia `npm run dev` o se vuelve a ejecutar `npm run build`.
 
@@ -350,3 +350,4 @@ El registro de asistencia y revisiones previo a la separación está en el READM
 | Parte | Asistente | Qué generó la IA | Qué verificó el equipo |
 |---|---|---|---|
 | Separación del cliente web | Codex | Extracción del historial, configuración de CI y Dependabot, copia versionada del contrato y actualización de las instrucciones de instalación. | Codex verificó el contrato, lint, tipos, compilación, las 210 pruebas de Vitest, los 16 recorridos de Playwright y la auditoría con el umbral de CI. Revisión humana pendiente. |
+| Enlace de WhatsApp de la tienda ([#166](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/issues/166)) | Codex y Claude Code | Codex escribió la validación de `VITE_STORE_WHATSAPP` (código de país, `+` inicial opcional, hasta 15 dígitos) y sus pruebas. Claude Code la trasladó desde el backend. | Lint, tipos y las 215 pruebas de Vitest pasaron en una copia limpia. Revisión humana pendiente. |
