@@ -1718,6 +1718,11 @@ export interface components {
             concentracion: string | null;
             familia: string | null;
             foto_url: string | null;
+            /** @description Variantes de la foto en orden ascendente de ancho en píxeles. */
+            foto_variantes?: {
+                ancho: number;
+                url: string;
+            }[];
             etiquetas: {
                 momento: unknown[];
                 clima: unknown[];
@@ -1735,6 +1740,11 @@ export interface components {
             familia: string | null;
             descripcion: string | null;
             foto_url: string | null;
+            /** @description Variantes de la foto en orden ascendente de ancho en píxeles. */
+            foto_variantes?: {
+                ancho: number;
+                url: string;
+            }[];
             notas: {
                 salida: string[];
                 corazon: string[];
