@@ -14,6 +14,8 @@ Cliente web de ArchivumParfums. La SPA en Vue 3 y TypeScript consume la API del 
 
 ## Instalación
 
+En Windows, [`instalar.bat`](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/blob/main/instalar.bat) del backend clona este repositorio junto a `ArchivumParfums-Hexagonal`, instala sus dependencias y prepara la API y la base de datos; se puede repetir sin duplicar datos. Lo que sigue es la instalación a mano.
+
 Los comandos sirven en PowerShell, en Git Bash y en una terminal de Linux o macOS.
 
 1. Clonar el repositorio y entrar en su raíz.
@@ -29,14 +31,14 @@ Los comandos sirven en PowerShell, en Git Bash y en una terminal de Linux o macO
    npm ci
    ```
 
-3. Copiar el ejemplo de variables de entorno:
+3. Revisar la configuración. Con el backend clonado al lado, en `../ArchivumParfums-Hexagonal`, el cliente lee sus variables `VITE_` del único `.env` del proyecto, `../ArchivumParfums-Hexagonal/archivum-api-hexagonal/.env`, y no hace falta otro archivo. Sin el backend al lado, se copia el ejemplo:
 
    ```bash
    cp .env.example .env              # Git Bash, Linux o macOS
    Copy-Item .env.example .env       # PowerShell
    ```
 
-   Si la API corre en otra dirección o puerto, se cambia `VITE_API_URL` en `.env`.
+   Si la API corre en otra dirección o puerto, se cambia `VITE_API_URL` en el `.env` que corresponda.
 
 4. Levantar el servidor de desarrollo, con la API ya en ejecución:
 
@@ -49,6 +51,8 @@ Los comandos sirven en PowerShell, en Git Bash y en una terminal de Linux o macO
 ## Variables de entorno
 
 Vite solo expone al navegador las variables que empiezan con `VITE_`. Todas se declaran en `.env.example`, con su tipo en `env.d.ts`, y se leen desde `src/shared/config.ts`; ningún archivo del código tiene una dirección escrita. `.env` nunca se versiona.
+
+`vite.config.ts` toma las variables de `../ArchivumParfums-Hexagonal/archivum-api-hexagonal/.env` cuando ese archivo existe, para que el proyecto tenga un solo `.env`; en ese caso se ignora el `.env` de esta carpeta. Ese archivo también guarda los secretos de la API, pero el navegador solo recibe las variables `VITE_`. Sin el backend al lado, como en CI, se usa el `.env` de esta carpeta.
 
 | Variable | Ejemplo | Para qué sirve |
 |---|---|---|
@@ -358,6 +362,7 @@ El registro de asistencia y revisiones previo a la separación está en el READM
 
 | Parte | Asistente | Qué generó la IA | Qué verificó el equipo |
 |---|---|---|---|
+| Un solo `.env` con el backend ([#349](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/issues/349)) | Claude Code | `envDir` en `vite.config.ts` hacia `../ArchivumParfums-Hexagonal/archivum-api-hexagonal` cuando ese `.env` existe, y la documentación. | Se compiló con el `.env` del backend al lado y sin él: en el primer caso el bundle toma `VITE_API_URL` de ese archivo y no contiene su `APP_KEY` ni nombres de la base; en el segundo usa el `.env` propio. Lint, tipos y Vitest (215 pruebas) pasan. Revisión humana pendiente. |
 | Separación del cliente web | Codex | Extracción del historial, configuración de CI y Dependabot, copia versionada del contrato y actualización de las instrucciones de instalación. | Codex verificó el contrato, lint, tipos, compilación, las 210 pruebas de Vitest, los 16 recorridos de Playwright y la auditoría con el umbral de CI. Revisión humana pendiente. |
 | Enlace de WhatsApp de la tienda ([#166](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/issues/166)) | Codex y Claude Code | Codex escribió la validación de `VITE_STORE_WHATSAPP` (código de país, `+` inicial opcional, hasta 15 dígitos) y sus pruebas. Claude Code la trasladó desde el backend. | Lint, tipos y las 215 pruebas de Vitest pasaron en una copia limpia. Revisión humana pendiente. |
 | Fotos de perfumes desde Cloudflare R2 ([#340](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/issues/340)) | Codex y Claude Code | Codex escribió `srcset`, `sizes` y el respaldo a la foto original en `PerfumeArt`, la tarjeta y el detalle, con sus pruebas. Claude Code los trasladó desde el backend con el contrato de #341. | `api:check`, lint, tipos, las 216 pruebas de Vitest y los 5 recorridos de `e2e/catalog.spec.ts` pasaron. Revisión humana pendiente. |
