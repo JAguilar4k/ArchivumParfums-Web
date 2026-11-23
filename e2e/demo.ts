@@ -84,6 +84,20 @@ export const owner: Schemas['CurrentAccountResource'] = {
   tienda: demoStore,
 }
 
+// The administrator of the platform (#347) belongs to no store.
+export const platformAdmin: Schemas['CurrentAccountResource'] = {
+  ...customer,
+  nombre: 'Equipo de desarrollo',
+  correo: 'dev@example.test',
+  rol: 'administrador_plataforma',
+  tienda: null,
+}
+
+export const platformBusinesses: Schemas['PlatformBusinessResource'][] = [
+  { id: demoStore.id, nombre: storeProfile.nombre, slug: storeSlug, zona_horaria: 'America/Costa_Rica' },
+  { id: '0193b0d4-0000-7000-8000-000000000031', nombre: 'Esencias del Norte', slug: 'esencias-del-norte', zona_horaria: 'America/Costa_Rica' },
+]
+
 export const service: Schemas['PublicService'] = {
   id: '0193b0d4-0000-7000-8000-000000000301',
   nombre: 'Prueba de olores',

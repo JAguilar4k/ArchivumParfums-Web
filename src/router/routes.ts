@@ -4,6 +4,7 @@ import { appointmentRoutes } from '@/features/appointments/routes'
 import { errorRoutes } from '@/features/errors/routes'
 import { helpRoutes } from '@/features/help/routes'
 import { orderRoutes } from '@/features/orders/routes'
+import { platformRoutes } from '@/features/platform/routes'
 import { registrationRoutes } from '@/features/registration/routes'
 import { sessionRoutes } from '@/features/session/routes'
 import { storefrontRoutes } from '@/features/storefront/routes'
@@ -17,5 +18,6 @@ export const routes: RouteRecordRaw[] = [
   ...sessionRoutes,
   ...helpRoutes,
   ...registrationRoutes,
+  ...platformRoutes,
   ...errorRoutes,
 ]
