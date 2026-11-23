@@ -29,6 +29,58 @@ test('opens Inicio, redirects old filters, and preserves the catalog URL and pag
   await expect(page.getByRole('main').getByRole('status').filter({ hasText: /Mostrando 1–14 de 14 perfumes/ })).toBeVisible()
 })
 
+test('requests a smaller photo for a catalog card than for the perfume detail', async ({ page }) => {
+  const media = 'https://media.archivum.test'
+  const variant = (width: number) => `${media}/cdn-cgi/image/width=${width},fit=contain/perfume.jpg`
+  await page.setViewportSize({ width: 390, height: 844 })
+  await mockApi(page, {
+    featuredPhoto: {
+      foto_url: `${media}/perfume.jpg`,
+      foto_variantes: [320, 640, 960].map((ancho) => ({ ancho, url: variant(ancho) })),
+    },
+  })
+  await page.route(`${media}/**`, (route) => {
+    const width = Number(new URL(route.request().url()).pathname.match(/width=(\d+)/)?.[1] ?? 960)
+    return route.fulfill({
+      contentType: 'image/svg+xml',
+      body: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${width}"></svg>`,
+    })
+  })
+
+  await page.goto(`${showcasePath}?texto=${encodeURIComponent(featuredPerfume.nombre)}`)
+  const perfumeName = `${featuredPerfume.marca} ${featuredPerfume.nombre}`
+  const link = page.getByRole('link', { name: perfumeName, exact: true })
+  const thumbnail = page.locator('.perfume-card').filter({ has: link }).locator('img')
+  await thumbnail.scrollIntoViewIfNeeded()
+  await expect(thumbnail).toHaveAttribute('alt', '')
+  await expect.poll(() => thumbnail.evaluate((image) => (image as HTMLImageElement).currentSrc)).toBe(variant(320))
+
+  await link.click()
+  const photo = page.getByRole('img', { name: `Botella de ${perfumeName}` })
+  await photo.scrollIntoViewIfNeeded()
+  await expect.poll(() => photo.evaluate((image) => (image as HTMLImageElement).currentSrc)).toBe(variant(640))
+})
+
+test('displays the original perfume photo when a transformation redirects', async ({ page, baseURL }) => {
+  const original = new URL('/favicon.ico', baseURL).href
+  const variant = new URL('/cdn-cgi/image/width=640,fit=contain,format=auto,onerror=redirect/perfume.jpg', baseURL).href
+  await page.setViewportSize({ width: 390, height: 844 })
+  await mockApi(page, { featuredPhoto: {
+    foto_url: original,
+    foto_variantes: [{ ancho: 640, url: variant }],
+  } })
+  await page.route((url) => url.href === variant, (route) => route.fulfill({
+    status: 307,
+    headers: { location: original },
+  }))
+
+  await page.goto(perfumePath())
+  const photo = page.getByRole('img', { name: `Botella de ${featuredPerfume.marca} ${featuredPerfume.nombre}` })
+  await photo.scrollIntoViewIfNeeded()
+  await expect.poll(() => photo.evaluate((image) => (image as HTMLImageElement).currentSrc)).toBe(variant)
+  await expect.poll(() => photo.evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
+})
+
 test('applies all catalog filters and keeps the previous results while loading', async ({ page }) => {
   await mockApi(page, { slowSearch: { text: 'Noctis', delayMs: 750 } })
   await page.goto(`${showcasePath}?pagina=2`)
