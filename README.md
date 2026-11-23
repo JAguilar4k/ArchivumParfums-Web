@@ -14,6 +14,8 @@ Cliente web de ArchivumParfums. La SPA en Vue 3 y TypeScript consume la API del 
 
 ## Instalación
 
+En Windows, [`instalar.bat`](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/blob/main/instalar.bat) del backend clona este repositorio junto a `ArchivumParfums-Hexagonal`, instala sus dependencias y prepara la API y la base de datos; se puede repetir sin duplicar datos. Lo que sigue es la instalación a mano.
+
 Los comandos sirven en PowerShell, en Git Bash y en una terminal de Linux o macOS.
 
 1. Clonar el repositorio y entrar en su raíz.
@@ -29,14 +31,14 @@ Los comandos sirven en PowerShell, en Git Bash y en una terminal de Linux o macO
    npm ci
    ```
 
-3. Copiar el ejemplo de variables de entorno:
+3. Revisar la configuración. Con el backend clonado al lado, en `../ArchivumParfums-Hexagonal`, el cliente lee sus variables `VITE_` del único `.env` del proyecto, `../ArchivumParfums-Hexagonal/archivum-api-hexagonal/.env`, y no hace falta otro archivo. Sin el backend al lado, se copia el ejemplo:
 
    ```bash
    cp .env.example .env              # Git Bash, Linux o macOS
    Copy-Item .env.example .env       # PowerShell
    ```
 
-   Si la API corre en otra dirección o puerto, se cambia `VITE_API_URL` en `.env`.
+   Si la API corre en otra dirección o puerto, se cambia `VITE_API_URL` en el `.env` que corresponda.
 
 4. Levantar el servidor de desarrollo, con la API ya en ejecución:
 
@@ -49,6 +51,8 @@ Los comandos sirven en PowerShell, en Git Bash y en una terminal de Linux o macO
 ## Variables de entorno
 
 Vite solo expone al navegador las variables que empiezan con `VITE_`. Todas se declaran en `.env.example`, con su tipo en `env.d.ts`, y se leen desde `src/shared/config.ts`; ningún archivo del código tiene una dirección escrita. `.env` nunca se versiona.
+
+`vite.config.ts` toma las variables de `../ArchivumParfums-Hexagonal/archivum-api-hexagonal/.env` cuando ese archivo existe, para que el proyecto tenga un solo `.env`; en ese caso se ignora el `.env` de esta carpeta. Ese archivo también guarda los secretos de la API, pero el navegador solo recibe las variables `VITE_`. Sin el backend al lado, como en CI, se usa el `.env` de esta carpeta.
 
 | Variable | Ejemplo | Para qué sirve |
 |---|---|---|
