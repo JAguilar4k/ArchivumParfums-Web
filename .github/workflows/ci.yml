@@ -16,7 +16,8 @@ jobs:
   web:
     name: Web
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The browser download can take minutes on a cold runner.
+    timeout-minutes: 20
 
     steps:
       - name: Check out the repository
@@ -46,8 +47,24 @@ jobs:
       - name: Build for production
         run: npm run build
 
+      - name: Find the Playwright version
+        id: playwright
+        run: echo "version=$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the Playwright browser
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
       - name: Install the Playwright browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
+
+      - name: Install the system libraries of the browser
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Run the browser tests
         # Journeys, axe audit (WCAG 2.2 AAA) and navigation times, against a mocked API.
