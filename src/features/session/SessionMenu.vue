@@ -57,6 +57,9 @@ async function signOut(): Promise<void> {
         <p class="session-menu__name">{{ session.account?.nombre }}</p>
         <RouterLink v-if="session.role === 'cliente'" :to="{ name: 'orders' }">Mis pedidos</RouterLink>
         <RouterLink v-if="session.role === 'cliente'" :to="{ name: 'appointments' }">Mis citas</RouterLink>
+        <RouterLink v-if="session.role === 'administrador_plataforma'" :to="{ name: 'platform-businesses' }">
+          Tiendas de la plataforma
+        </RouterLink>
         <button type="button" class="button--secondary" :aria-disabled="signingOut || undefined" @click="signOut">
           Cerrar sesión
         </button>

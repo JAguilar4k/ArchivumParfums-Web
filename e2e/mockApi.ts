@@ -8,6 +8,8 @@ import {
   featuredPerfume,
   owner,
   perfumes,
+  platformAdmin,
+  platformBusinesses,
   recommendation,
   service,
   slot,
@@ -119,12 +121,30 @@ export async function mockApi(page: Page, options: Options = {}) {
 
     if (path === '/sesiones' && method === 'POST') {
       const payload = body as Schemas['StoreSessionRequest']
-      const token = payload.correo === owner.correo ? 'demo-owner' : 'demo-customer'
+      const token = payload.correo === owner.correo
+        ? 'demo-owner'
+        : payload.correo === platformAdmin.correo ? 'demo-platform' : 'demo-customer'
       return json(route, { data: { token, tipo: 'Bearer', vence_en: new Date(Date.now() + 3_600_000).toISOString() } }, 201)
     }
 
     if (path === '/sesiones/actual' && method === 'DELETE') {
       return route.fulfill({ status: 204 })
+    }
+
+    if (path === '/plataforma/tiendas') {
+      if (!request.headers().authorization?.endsWith('demo-platform')) {
+        return problem(route, 403, 'prohibido', 'No tiene permiso para esta acción.')
+      }
+
+      if (method === 'POST') {
+        const payload = body as Schemas['StorePlatformBusinessRequest']
+        if (platformBusinesses.some((business) => business.slug === payload.slug)) {
+          return problem(route, 422, 'datos-invalidos', 'Los datos enviados no son válidos.', { slug: ['Ya existe una tienda con ese slug.'] })
+        }
+        return json(route, { data: { id: '0193b0d4-0000-7000-8000-000000000032', nombre: payload.nombre, slug: payload.slug, zona_horaria: 'America/Costa_Rica' } }, 201)
+      }
+
+      return json(route, { data: platformBusinesses })
     }
 
     if (parts[0] === 'cuenta') {
@@ -133,7 +153,8 @@ export async function mockApi(page: Page, options: Options = {}) {
       }
 
       if (path === '/cuenta' && method === 'GET') {
-        const account = request.headers().authorization?.endsWith('demo-owner') ? owner : customer
+        const authorization = request.headers().authorization ?? ''
+        const account = authorization.endsWith('demo-owner') ? owner : authorization.endsWith('demo-platform') ? platformAdmin : customer
         return json(route, { data: account })
       }
 

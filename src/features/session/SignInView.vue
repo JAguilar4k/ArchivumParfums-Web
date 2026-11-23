@@ -38,7 +38,12 @@ async function submit(): Promise<void> {
   sending.value = false
 
   if (!problem.value) {
-    await router.replace(redirectTarget(route.query.redirect))
+    // The administrator of the platform has no store of its own: without a route to return to, it goes to the
+    // businesses of the platform (#347).
+    const home = session.role === 'administrador_plataforma' && route.query.redirect === undefined
+      ? { name: 'platform-businesses' }
+      : redirectTarget(route.query.redirect)
+    await router.replace(home)
 
     return
   }

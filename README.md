@@ -142,6 +142,14 @@ La vista "Crear cuenta" (`/crear-cuenta`, `src/features/registration`, [#194](ht
 - **Accesibilidad (AAA).** Cada campo tiene una pista antes del control, ligada con `aria-describedby`: para qué sirven el nombre y el correo, y un consejo para la contraseña que no repite la política de la API (#194): si la contraseña no la cumple, el 422 dice junto al campo qué le falta. "Mostrar la contraseña" deja revisarla. Si se envía sin marcar la casilla, el foco va a la casilla, que lee su mensaje, y el mensaje se va al marcarla. El aviso de privacidad va enmarcado dentro del formulario, y "Ayuda y glosario" explica la cuenta en "Su cuenta".
 - La contraseña solo vive en el formulario y en las dos solicitudes. "Iniciar sesión" enlaza a "Crear cuenta" con la misma ruta de regreso, y una cuenta con sesión que abre cualquiera de las dos vuelve al inicio.
 
+### Tiendas de la plataforma
+
+La vista "Tiendas de la plataforma" (`/plataforma/tiendas`, `src/features/platform`, [#347](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/issues/347)) es solo del rol `administrador_plataforma`, que llega ahí al iniciar sesión sin otra ruta de regreso y la encuentra en el menú de la sesión. Lista las tiendas de `GET /plataforma/tiendas`, cada una con el enlace a su vitrina, y registra una nueva con su dueño en `POST /plataforma/tiendas`.
+
+- **Errores.** Un slug o un correo ya usados, o un dato inválido, llegan como 422: cada campo muestra su mensaje, conserva lo escrito salvo la contraseña y el foco va al primer campo con error.
+- **Después del 201** una línea con `role="status"` dice qué tienda se registró y con qué correo inicia sesión su dueño, el formulario se vacía y la lista se vuelve a cargar.
+- **Accesibilidad (AAA).** Cada campo tiene su pista antes del control, ligada con `aria-describedby`; el botón lleva `aria-disabled` mientras la solicitud está en curso, y cada enlace a una vitrina nombra su tienda.
+
 ## Vitrina y recomendaciones
 
 Las páginas públicas de una tienda ([#128](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/issues/128)) llevan su slug en la ruta y no piden sesión. La raíz (`/`) abre la tienda de `VITE_DEFAULT_BUSINESS_SLUG`.
@@ -322,6 +330,7 @@ ArchivumParfums-Web/
 │   │   ├── appointments/ citas de prueba: reservar, "Mis citas", cambiar la hora y cancelar
 │   │   ├── help/         "Ayuda y glosario"
 │   │   ├── session/      store de la sesión, guardias por rol, "Iniciar sesión" y menú
+│   │   ├── platform/     "Tiendas de la plataforma", para quien la administra (#347)
 │   │   ├── registration/ "Crear cuenta" con el aviso de privacidad
 │   │   └── errors/       rutas de "Sin permiso" y "No encontrado"
 │   └── shared/           lo que usan varias funcionalidades: config.ts, money.ts,
@@ -351,3 +360,4 @@ El registro de asistencia y revisiones previo a la separación está en el READM
 |---|---|---|---|
 | Separación del cliente web | Codex | Extracción del historial, configuración de CI y Dependabot, copia versionada del contrato y actualización de las instrucciones de instalación. | Codex verificó el contrato, lint, tipos, compilación, las 210 pruebas de Vitest, los 16 recorridos de Playwright y la auditoría con el umbral de CI. Revisión humana pendiente. |
 | Enlace de WhatsApp de la tienda ([#166](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/issues/166)) | Codex y Claude Code | Codex escribió la validación de `VITE_STORE_WHATSAPP` (código de país, `+` inicial opcional, hasta 15 dígitos) y sus pruebas. Claude Code la trasladó desde el backend. | Lint, tipos y las 215 pruebas de Vitest pasaron en una copia limpia. Revisión humana pendiente. |
+| Tiendas de la plataforma ([#347](https://github.com/JAguilar4k/ArchivumParfums-Hexagonal/issues/347)) | Claude Code | La vista "Tiendas de la plataforma" con su ruta para el rol `administrador_plataforma`, el enlace del menú, el destino al iniciar sesión, los tipos regenerados con el contrato del backend, las pruebas de Vitest y las de Playwright con axe. | `npm run api:check`, `lint`, `type-check`, las 216 pruebas de Vitest, `build` y los 17 recorridos de Playwright pasan en local, con 0 hallazgos de axe en la vista en tema claro y oscuro a 1280 y 390 px y sin desborde a 320 px. Revisión humana pendiente. |

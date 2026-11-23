@@ -853,6 +853,27 @@ export interface paths {
         patch: operations["catalog.perfumes.variants.update"];
         trace?: never;
     };
+    "/plataforma/tiendas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List every business of the platform by name */
+        get: operations["businesses.platform.index"];
+        put?: never;
+        /**
+         * Register a business with the default settings and its owner. A slug or an owner email already in use answers 422
+         *     in its field, so the form can show it next to the control
+         */
+        post: operations["businesses.platform.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tiendas/{tienda}": {
         parameters: {
             query?: never;
@@ -1189,7 +1210,7 @@ export interface components {
             nombre: string;
             correo: string;
             /** @enum {string} */
-            rol: "dueno" | "colaborador" | "cliente";
+            rol: "dueno" | "colaborador" | "cliente" | "administrador_plataforma";
             tienda: {
                 id: string;
                 nombre: string;
@@ -1524,6 +1545,13 @@ export interface components {
              */
             medio: "tarjeta" | "sinpe_movil" | null;
             consulta_pendiente: boolean;
+        };
+        /** PlatformBusinessResource */
+        PlatformBusinessResource: {
+            id: string;
+            nombre: string;
+            slug: string;
+            zona_horaria: string;
         };
         /** Problema */
         Problema: {
@@ -1864,6 +1892,18 @@ export interface components {
         StorePerfumeVariant: {
             ml: number;
             precio_manual?: number | null;
+        };
+        /** StorePlatformBusinessRequest */
+        StorePlatformBusinessRequest: {
+            nombre: string;
+            slug: string;
+            zona_horaria?: string;
+            lugar_cita?: string | null;
+            nombre_dueno: string;
+            /** Format: email */
+            correo_dueno: string;
+            contrasena_dueno: string;
+            dueno_atiende_citas?: boolean;
         };
         /** StoreRecommendation */
         StoreRecommendation: {
@@ -6048,6 +6088,117 @@ export interface operations {
             };
             /** @description Recurso no encontrado */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            /** @description Datos inválidos */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemaDeValidacion"];
+                };
+            };
+            /** @description Error interno */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+        };
+    };
+    "businesses.platform.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `PlatformBusinessResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformBusinessResource"][];
+                    };
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            /** @description Acción no permitida */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            /** @description Error interno */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+        };
+    };
+    "businesses.platform.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StorePlatformBusinessRequest"];
+            };
+        };
+        responses: {
+            /** @description `PlatformBusinessResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformBusinessResource"];
+                    };
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            /** @description Acción no permitida */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
