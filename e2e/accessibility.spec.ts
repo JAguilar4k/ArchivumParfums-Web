@@ -1,7 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
-import { featuredPerfume, perfumePath, showcasePath, storePath } from './demo'
+import { featuredPerfume, perfumePath, platformAdmin, showcasePath, storePath } from './demo'
 import { mockApi } from './mockApi'
+import { signIn } from './signIn'
 
 const tags = ['wcag2a', 'wcag2aa', 'wcag2aaa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice']
 
@@ -83,6 +84,20 @@ for (const colorScheme of ['light', 'dark'] as const) {
         if (path === '/iniciar-sesion') await capture(page, info, `mi-cuenta-${colorScheme}-${width}`)
         await audit(page, await h1.innerText())
       }
+
+      // The administrator of the platform (#347) lands on its page after signing in.
+      await page.goto('/iniciar-sesion')
+      await signIn(page, platformAdmin.correo)
+      await expect(page.getByRole('heading', { level: 1, name: 'Tiendas de la plataforma' })).toBeVisible()
+      await expect(page.getByRole('link', { name: 'Ver la vitrina de Esencias del Norte' })).toBeVisible()
+      await capture(page, info, `plataforma-tiendas-${colorScheme}-${width}`, true)
+      await audit(page, 'Tiendas de la plataforma')
+      const form = page.getByRole('form', { name: 'Registrar una tienda' })
+      await form.getByLabel('Nombre de la tienda').fill('ArchivumParfums')
+      await form.getByLabel('Dirección de la vitrina').fill('archivumparfums')
+      await form.getByRole('button', { name: 'Registrar la tienda' }).click()
+      await expect(form.getByLabel('Dirección de la vitrina')).toBeFocused()
+      await audit(page, 'Tiendas de la plataforma con errores')
     })
   }
 }
@@ -120,4 +135,15 @@ test('does not overflow horizontally at 320 px in pages or drawers', async ({ pa
     })
     expect.soft(overflows, `Anchura en ${path}`).toEqual([])
   }
+})
+
+test('does not overflow horizontally at 320 px in "Tiendas de la plataforma"', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 760 })
+  await mockApi(page)
+  await page.goto('/iniciar-sesion')
+  await signIn(page, platformAdmin.correo)
+  await expect(page.getByRole('heading', { level: 1, name: 'Tiendas de la plataforma' })).toBeVisible()
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)
+  expect(overflow).toBe(false)
 })
